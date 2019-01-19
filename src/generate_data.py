@@ -1,8 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import os
-from sklearn import datasets
 
 def get_data(n_points, data_type):
     """
@@ -24,10 +20,10 @@ def get_data(n_points, data_type):
     dx /= dx.max()
     dy /= dy.max()
     return np.hstack((dx,dy))
-
-X = get_data(1000, 'spiral')
-plt.plot(X[:,0], X[:,1], '.', label='class 1')
-plt.title('training set')
-plt.legend()
-plt.show()
+if __name__ == '__main__':
+    X = get_data(1000, 'spiral')
+    plt.plot(X[:,0], X[:,1], '.', label='class 1')
+    plt.title('training set')
+    plt.legend()
+    plt.show()
 
