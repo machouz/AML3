@@ -6,11 +6,13 @@ from discriminator import Discriminator
 from generate_data import get_data
 from generator import Generator
 from utils import *
+import sys
+
 
 NOISE_DIM = 2
 GEN_LR = 0.001
 DIS_LR = 0.002
-DATA = 'line'
+DATA = sys.argv[1] if len(sys.argv) > 1 else 'line'
 
 
 def train_discriminator(example, discriminator, loss_fun, target):
