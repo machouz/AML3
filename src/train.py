@@ -1,20 +1,16 @@
-import numpy as np
-
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
-
-import torch.nn.functional as F
-from generator import Generator
-from generate_data import get_data
 from discriminator import Discriminator
+from generate_data import get_data
+from generator import Generator
 from utils import *
 
 NOISE_DIM = 2
 GEN_LR = 0.001
 DIS_LR = 0.002
-DATA = 'par'
+DATA = 'line'
 
 
 def train_discriminator(example, discriminator, loss_fun, target):
@@ -44,15 +40,17 @@ def train(n_samples, data_type, generator, discriminator, gen_optimizer, dis_opt
     dis_gen = discriminator(gen_out.detach())
     dis_loss_gen = loss_fun(dis_gen, torch.zeros(n_samples, dtype=torch.long))
     dis_loss_gen.backward()
-    print("Discriminator loss : {}".format(dis_loss_gen.item() + dis_loss_real.item()))
+    #print("Discriminator loss : {}".format(dis_loss_gen.item() + dis_loss_real.item()))
     dis_optimizer.step()
 
     # Train generator
     dis_gen = discriminator(gen_out)
     loss_gen = loss_fun(dis_gen, torch.ones(n_samples, dtype=torch.long))
     loss_gen.backward()
-    print("Generator loss : {}".format(loss_gen.item()))
+    #print("Generator loss : {}".format(loss_gen.item()))
     gen_optimizer.step()
+
+    return dis_loss_gen.item() + dis_loss_real.item(), loss_gen.item()
 
 
 def plot_points(data_type, generator, n_samples=1000):
@@ -81,7 +79,14 @@ if __name__ == '__main__':
     dis_optimizer = optim.RMSprop(discriminator.parameters(), lr=DIS_LR)
 
     loss = nn.CrossEntropyLoss()
+    dis_loss_history = []
+    gen_loss_history = []
     for i in range(0, 80000):
-        train(100, DATA, generator, discriminator, gen_optimizer, dis_optimizer, loss)
+        dis_loss, gen_loss = train(100, DATA, generator, discriminator, gen_optimizer, dis_optimizer, loss)
+        dis_loss_history.append(dis_loss)
+        gen_loss_history.append(gen_loss)
 
     plot_points(DATA, generator)
+    create_graph("Loss", array_datas=[dis_loss_history, gen_loss_history], array_legends=["Discriminator", "Generator"],
+                 xlabel="Epoch", ylabel="Loss",
+                 make_new=True)
