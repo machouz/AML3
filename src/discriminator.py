@@ -1,27 +1,33 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 
 
 class Discriminator(nn.Module):
-    def __init__(self, input_dim=2, hidden_layer=64, tagset_size=1):
+    def __init__(self, input_dim=2, hidden_layer=[16,16,2], tagset_size=1):
         super(Discriminator, self).__init__()
         self.input_dim = input_dim
         self.hidden_layer = hidden_layer
         self.tagset_size = tagset_size
 
-        self.hidden = nn.Sequential(
-            nn.Linear(self.input_dim, self.hidden_layer),
-            nn.ReLU()
-        )
-        self.out = nn.Sequential(
-            nn.Linear(self.hidden_layer, self.tagset_size),
-            nn.Sigmoid()
-        )
+        self.hidden1 = nn.Linear(self.input_dim, self.hidden_layer[0])
+        self.hidden2 = nn.Linear(self.hidden_layer[0], self.hidden_layer[1])
+        self.hidden3 = nn.Linear(self.hidden_layer[1], self.hidden_layer[2])
+        self.out = nn.Linear(self.hidden_layer[2], self.tagset_size)
 
     def forward(self, input):
-        hidden = self.hidden(input)
+        hidden = self.hidden1(input)
+        hidden = F.leaky_relu(hidden, 0.2)
+        hidden = F.dropout(hidden, p=0.3)
+        hidden = self.hidden2(hidden)
+        hidden = F.leaky_relu(hidden, 0.2)
+        hidden = F.dropout(hidden, p=0.3)
+        hidden = self.hidden3(hidden)
+        hidden = F.leaky_relu(hidden, 0.2)
+        hidden = F.dropout(hidden, p=0.3)
         out = self.out(hidden)
+        out = F.sigmoid(out)
         return out
 
 

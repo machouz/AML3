@@ -1,27 +1,29 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 
 
 class Generator(nn.Module):
-    def __init__(self, noise_dim=1, hidden_layer=64, output_dim=2):
+    def __init__(self, noise_dim=2, hidden_layer=[16, 16], output_dim=2):
         super(Generator, self).__init__()
         self.noise_dim = noise_dim
         self.hidden_layer = hidden_layer
         self.output_dim = output_dim
 
-        self.hidden = nn.Sequential(
-            nn.Linear(self.noise_dim, self.hidden_layer),
-            nn.ReLU()
-        )
-        self.out = nn.Sequential(
-            nn.Linear(self.hidden_layer, self.output_dim),
-            nn.ReLU()
-        )
+        self.hidden1 = nn.Linear(self.noise_dim, self.hidden_layer[0])
+        self.hidden2 = nn.Linear(self.hidden_layer[0], self.hidden_layer[1])
+        self.out = nn.Linear(self.hidden_layer[1], self.output_dim)
 
     def forward(self, noise):
-        hidden = self.hidden(noise)
+        hidden = self.hidden1(noise)
+        hidden = F.leaky_relu(hidden, 0.2)
+        hidden = F.dropout(hidden)
+        hidden = self.hidden2(hidden)
+        hidden = F.leaky_relu(hidden, 0.2)
+        hidden = F.dropout(hidden, 0.3)
         out = self.out(hidden)
+        out = F.tanh(out)
         return out
 
 
