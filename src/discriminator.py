@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Discriminator(nn.Module):
-    def __init__(self, input_dim=2, hidden_layer=[16,16,2], tagset_size=1):
+    def __init__(self, input_dim=2, hidden_layer=[16,16,2], tagset_size=2):
         super(Discriminator, self).__init__()
         self.input_dim = input_dim
         self.hidden_layer = hidden_layer
@@ -19,15 +19,12 @@ class Discriminator(nn.Module):
     def forward(self, input):
         hidden = self.hidden1(input)
         hidden = F.leaky_relu(hidden, 0.2)
-        hidden = F.dropout(hidden, p=0.3)
         hidden = self.hidden2(hidden)
         hidden = F.leaky_relu(hidden, 0.2)
-        hidden = F.dropout(hidden, p=0.3)
         hidden = self.hidden3(hidden)
         hidden = F.leaky_relu(hidden, 0.2)
-        hidden = F.dropout(hidden, p=0.3)
         out = self.out(hidden)
-        out = F.sigmoid(out)
+        out = F.softmax(out)
         return out
 
 

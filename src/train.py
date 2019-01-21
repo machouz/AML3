@@ -13,7 +13,7 @@ from utils import *
 
 NOISE_DIM = 2
 GEN_LR = 0.001
-DIS_LR = 0.001
+DIS_LR = 0.002
 DATA = 'par'
 
 
@@ -34,7 +34,7 @@ def train(n_samples, data_type, generator, discriminator, gen_optimizer, dis_opt
     real_ex = torch.tensor(real_ex, dtype=torch.float)
 
     dis_real = discriminator(real_ex)
-    dis_loss_real = loss_fun(dis_real, torch.ones(n_samples, 1))
+    dis_loss_real = loss_fun(dis_real, torch.ones(n_samples, dtype=torch.long))
     dis_loss_real.backward()
 
     # Train discriminator on fake
@@ -42,14 +42,14 @@ def train(n_samples, data_type, generator, discriminator, gen_optimizer, dis_opt
     gen_out = generator(noise)
 
     dis_gen = discriminator(gen_out.detach())
-    dis_loss_gen = loss_fun(dis_gen, torch.zeros(n_samples, 1))
+    dis_loss_gen = loss_fun(dis_gen, torch.zeros(n_samples, dtype=torch.long))
     dis_loss_gen.backward()
-    print("Discriminator loss : {}".format(dis_loss_gen.item()))
+    print("Discriminator loss : {}".format(dis_loss_gen.item() + dis_loss_real.item()))
     dis_optimizer.step()
 
     # Train generator
     dis_gen = discriminator(gen_out)
-    loss_gen = loss_fun(dis_gen, torch.ones(n_samples, 1))
+    loss_gen = loss_fun(dis_gen, torch.ones(n_samples, dtype=torch.long))
     loss_gen.backward()
     print("Generator loss : {}".format(loss_gen.item()))
     gen_optimizer.step()
@@ -75,13 +75,13 @@ def plot_points(data_type, generator, n_samples=1000):
 
 if __name__ == '__main__':
     generator = Generator(noise_dim=NOISE_DIM)
-    gen_optimizer = optim.Adam(generator.parameters(), lr=GEN_LR)
+    gen_optimizer = optim.RMSprop(generator.parameters(), lr=GEN_LR)
 
     discriminator = Discriminator()
-    dis_optimizer = optim.Adam(discriminator.parameters(), lr=DIS_LR)
+    dis_optimizer = optim.RMSprop(discriminator.parameters(), lr=DIS_LR)
 
-    loss = nn.BCELoss()
-    for i in range(0, 10000):
+    loss = nn.CrossEntropyLoss()
+    for i in range(0, 80000):
         train(100, DATA, generator, discriminator, gen_optimizer, dis_optimizer, loss)
 
     plot_points(DATA, generator)

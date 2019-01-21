@@ -18,12 +18,9 @@ class Generator(nn.Module):
     def forward(self, noise):
         hidden = self.hidden1(noise)
         hidden = F.leaky_relu(hidden, 0.2)
-        hidden = F.dropout(hidden)
         hidden = self.hidden2(hidden)
         hidden = F.leaky_relu(hidden, 0.2)
-        hidden = F.dropout(hidden, 0.3)
         out = self.out(hidden)
-        out = F.tanh(out)
         return out
 
 
