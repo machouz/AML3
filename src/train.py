@@ -20,7 +20,7 @@ def train(n_samles, data_type, generator, discriminator, gen_optimizer, dis_opti
     dis_optimizer.zero_grad()
     gen_optimizer.zero_grad()
 
-    # Trian discriminator on real
+    # Train discriminator on real
     real_ex = get_data(n_points=n_samles, data_type=data_type)
     real_ex = torch.tensor(real_ex, dtype=torch.float)
 
@@ -28,17 +28,17 @@ def train(n_samles, data_type, generator, discriminator, gen_optimizer, dis_opti
     dis_loss_real = loss_fun(dis_real, torch.ones(n_samles, 1))
     dis_loss_real.backward()
 
-    # Trian discriminator on fake
+    # Train discriminator on fake
     noise = torch.rand(n_samles, 1)
     gen_out = generator(noise)
     detached_gen_out = gen_out.clone().detach()
 
     dis_gen = discriminator(detached_gen_out)
     dis_loss_gen = loss_fun(dis_gen, torch.zeros(n_samles, 1))
-    dis_loss_gen.backward()
+    dis_loss_gen.backward(retain_graph=True)
     dis_optimizer.step()
 
-    # Trian generator on fake
+    # Trian generator
     loss_gen = loss_fun(dis_gen, torch.ones(n_samles, 1))
     loss_gen.backward()
     print(loss_gen.item())
