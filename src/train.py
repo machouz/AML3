@@ -17,27 +17,32 @@ def train_discriminator(example, discriminator, loss_fun, target):
 
 
 def train(n_samles, data_type, generator, discriminator, gen_optimizer, dis_optimizer, loss_fun):
+    dis_optimizer.zero_grad()
+    gen_optimizer.zero_grad()
+
+    # Trian discriminator on real
+    real_ex = get_data(n_points=n_samles, data_type=data_type)
+    real_ex = torch.tensor(real_ex, dtype=torch.float)
+
+    dis_real = discriminator(real_ex)
+    dis_loss_real = loss_fun(dis_real, torch.ones(n_samles, 1))
+    dis_loss_real.backward()
+
+    # Trian discriminator on fake
     noise = torch.rand(n_samles, 1)
     gen_out = generator(noise)
-    real_ex = torch.tensor(get_data(n_points=n_samles, data_type=data_type), dtype=torch.float)
+    detached_gen_out = gen_out.clone().detach()
 
-    dis_gen_out = gen_out.clone().detach()
-
-    dis_gen = discriminator(dis_gen_out)
-    dis_real = discriminator(real_ex)
-
-    loss_dis_real = loss_fun(dis_real, torch.ones(n_samles, 1))
-    loss_dis_real.backward()
-
-    loss_dis_gen = loss_fun(dis_gen, torch.zeros(n_samles, 1))
-    loss_dis_gen.backward(retain_graph=True)
-
+    dis_gen = discriminator(detached_gen_out)
+    dis_loss_gen = loss_fun(dis_gen, torch.zeros(n_samles, 1))
+    dis_loss_gen.backward()
     dis_optimizer.step()
 
+    # Trian generator on fake
     loss_gen = loss_fun(dis_gen, torch.ones(n_samles, 1))
     loss_gen.backward()
     print(loss_gen.item())
-    gen_optimizer.step()
+    # gen_optimizer.step()
 
 
 if __name__ == '__main__':
@@ -48,5 +53,5 @@ if __name__ == '__main__':
     dis_optimizer = optim.Adam(discriminator.parameters(), lr=DIS_LR)
 
     loss = nn.BCELoss()
-    for i in range(0,10000):
+    for i in range(0, 10000):
         train(100, 'par', generator, discriminator, gen_optimizer, dis_optimizer, loss)
